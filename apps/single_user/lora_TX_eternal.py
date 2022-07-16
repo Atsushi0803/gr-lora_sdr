@@ -20,27 +20,26 @@ from gnuradio import eng_notation
 from gnuradio import uhd
 import time
 import lora_sdr
-import random
+import sys
+
 
 class lora_TX(gr.top_block):
+
     def __init__(self):
         gr.top_block.__init__(self, "Lora Tx")
 
         ##################################################
         # Variables
         ##################################################
-        self.bw = bw = int(sys.argv[3])
-        self.sf = sf = int(sys.argv[2])
+        self.bw = bw = 250000
+        self.sf = sf = 7
         self.samp_rate = samp_rate = bw
         self.impl_head = impl_head = False
         self.has_crc = has_crc = False
-        # duty_ratio = float(sys.argv[4])
-        # self.frame_period = frame_period = int(517 * 2 ** sf / bw * 1000 * (100/duty_ratio)) # [msec]
-        self.frame_period = frame_period = int(sys.argv[4])
+        self.frame_period = frame_period = 340 #[msec]
         self.cr = cr = 3
         self.center_freq = center_freq = 920e6
         self.TX_gain = TX_gain = float(sys.argv[1])
-        self.n_tx = n_tx = int(sys.argv[5])
 
         ##################################################
         # Blocks
@@ -68,7 +67,7 @@ class lora_TX(gr.top_block):
         self.lora_sdr_hamming_enc_0 = lora_sdr.hamming_enc(cr, sf)
         self.lora_sdr_gray_decode_0 = lora_sdr.gray_decode(sf)
         self.lora_sdr_add_crc_0 = lora_sdr.add_crc(has_crc)
-        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("A"), frame_period)
+        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("1234"), frame_period)
 
 
         ##################################################
@@ -149,16 +148,13 @@ class lora_TX(gr.top_block):
 
 
 def main(top_block_cls=lora_TX, options=None):
-    if int(sys.argv[5]) < 1:
-        sys.exit(0)
-    time.sleep(random.random()*5)
     tb = top_block_cls()
 
     def sig_handler(sig=None, frame=None):
-        tb.stop()
+        #tb.stop()
         tb.wait()
 
-        sys.exit(0)
+        #sys.exit(0)
 
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
@@ -169,7 +165,7 @@ def main(top_block_cls=lora_TX, options=None):
         input('Press Enter to quit: ')
     except EOFError:
         pass
-    tb.stop()
+    #tb.stop()
     tb.wait()
 
 

@@ -80,6 +80,10 @@ namespace gr
             if (payload_str.size() && noutput_items >= 2*payload_str.front().length())
             {
                 pmt::pmt_t frame_len = pmt::from_long(2*payload_str.front().length());
+                //adding
+                //std::cout<<"payload_str"<<2*payload_str.front().length()<<std::endl;
+                //std::cout<<"pmt::payload_str_long"<<pmt::from_long(2*payload_str.front().length())<<std::endl;
+                //end
                 add_item_tag(0, nitems_written(0), pmt::string_to_symbol("frame_len"), frame_len);
 
                 add_item_tag(0, nitems_written(0), pmt::string_to_symbol("payload_str"), pmt::string_to_symbol(payload_str.front()));

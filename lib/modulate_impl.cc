@@ -4,6 +4,7 @@
 
 #include "modulate_impl.h"
 
+
 namespace gr
 {
     namespace lora_sdr
@@ -31,8 +32,9 @@ namespace gr
             m_os_factor = m_samp_rate / m_bw;
             m_samples_per_symbol = (uint32_t)(m_number_of_bins*m_os_factor);
 
-            m_inter_frame_padding = 20; // add some empty symbols at the end of a frame important for transmission with LimeSDR Mini
-
+            //m_inter_frame_padding = 20; // add some empty symbols at the end of a frame important for transmission with LimeSDR Mini
+	    m_inter_frame_padding =  500;
+	    
             m_downchirp.resize(m_samples_per_symbol);
             m_upchirp.resize(m_samples_per_symbol);
 
@@ -47,7 +49,8 @@ namespace gr
             }
 
             n_up = 8;
-            symb_cnt = -1;
+            //symb_cnt = -1;
+	    symb_cnt = 0;	//when css-apcma
             preamb_symb_cnt = 0;
             frame_cnt = 0;
             padd_cnt = m_inter_frame_padding;
@@ -80,106 +83,282 @@ namespace gr
             int output_offset = 0;
             // read tags
             std::vector<tag_t> tags;
+	    
+	    //my addings
+            int apcma_code_length = 513;
+	    //const int TX_array[] = {1, 2, 3, 4, 5, 6, 7, 8};
+	    const int start_var = 1;
+	    const int end_var = 32;
+	    int TX_array[end_var - start_var + 1];
+	    for (int i = 0; i < (end_var - start_var + 1); i++ ){
+		    TX_array[i] = start_var + i;
+	    }
+	    
+	    if (frame_cnt == 100){
+		    std::exit(1);
+	    }
+	    
+	    
+	    int tag_length=30;
+            //std::vector<gr_comprex> silent(m_samples_per_symbol, (0.0, 0.0));
+            //end
 
             get_tags_in_window(tags, 0, 0, ninput_items[0], pmt::string_to_symbol("frame_len"));
-            if (tags.size())
+	    
+	    
+	    if (tags.size())
             {
+		    //std::cout<<"tags.size"<<tags.size()<<std::endl;
+		    //std::cout<<"tags[0]"<<tags[0].value<<std::endl;
                 if (tags[0].offset != nitems_read(0))
                     nitems_to_process = std::min(tags[0].offset - nitems_read(0), (uint64_t)(float)noutput_items / m_samples_per_symbol);
                 else
                 {
                     if (tags.size() >= 2)
                         nitems_to_process = std::min(tags[1].offset - tags[0].offset, (uint64_t)(float)noutput_items / m_samples_per_symbol);
-                    if ( padd_cnt == m_inter_frame_padding)
+                    //if ( padd_cnt == m_inter_frame_padding)
+		    if ( tag_length >= 30)
                     {
                         m_frame_len = pmt::to_long(tags[0].value);
+			//std::cout<<"m_frame_len:	"<<m_frame_len<<std::endl;
                         tags[0].offset = nitems_written(0);
 
-                        tags[0].value = pmt::from_long(int((m_frame_len + m_inter_frame_padding + n_up + 4.25) * m_samples_per_symbol));
+                        //tags[0].value = pmt::from_long(int((m_frame_len + m_inter_frame_padding + n_up + 4.25) * m_samples_per_symbol));
+			//tags[0].value = pmt::from_long(tag_length*m_samples_per_symbol);
+			tags[0].value = pmt::from_long(int((apcma_code_length+20)*m_samples_per_symbol));
 
+			
+			//std::cout<<"tags[0].value:	"<<tags[0].value<<std::endl;
                         add_item_tag(0, tags[0]);
 
-                        symb_cnt = -1;
+                        //symb_cnt = -1;
+			symb_cnt = 0;
+			
                         preamb_symb_cnt = 0;
                         padd_cnt = 0;
                     }
                 }
             }
-
-            if (symb_cnt == -1) // preamble
-            {
-                for (int i = 0; i < noutput_items / m_samples_per_symbol; i++)
+	    //APCMA
+	    
+	    //for (int i =0; i < 10; i++){
+		//memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                //output_offset += m_samples_per_symbol;
+		//std::cout <<"1st_pulse_output_offset"<<output_offset<<std::endl;
+                //symb_cnt++;
+		//tag_length++;
+		
+		//for (int i =0; i < 2; i++){
+			//for (int j = 0; j < m_samples_per_symbol; j++)
+			//{
+				//out[output_offset + j] = gr_complex(0.0, 0.0);
+			//}
+			////std::cout<<"silent_time_between_1_and_2"<<std::endl;
+			////mencpy(&out[output_offset], &silent[0], m_samples_per_symbol * sizeof(gr_complex));
+			//output_offset += m_samples_per_symbol;	
+			//tag_length++;
+		//}
+		
+		    
+	    //}
+	    //frame_cnt++;
+	    //std::cout <<"frame_cnt_is::	"<<frame_cnt<<std::endl;
+	    
+	    //apcma_1st_pu8e
+            if(symb_cnt==0){
+		tag_length++;
+		send_data = TX_array[m_send];
+		m_send = (m_send+1) % (end_var - start_var + 1);
+                memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
+		//std::cout <<"1st_pulse_output_offset"<<output_offset<<std::endl;
+                symb_cnt++;
+            }
+            //silent_time_between_pulse1_and_pulse2
+	    for (int i =0; i < send_data; i++){
+			for (int j = 0; j < m_samples_per_symbol; j++)
+			{
+			out[output_offset + j] = gr_complex(0.0, 0.0);
+			}
+			//std::cout<<"silent_time_between_1_and_2"<<std::endl;
+			//mencpy(&out[output_offset], &silent[0], m_samples_per_symbol * sizeof(gr_complex));
+			output_offset += m_samples_per_symbol;	
+	    }
+		
+            //apcma_2nd_pulse
+            if(symb_cnt==1){
+                memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
+		//std::cout <<"2nd_pulse_output_offset"<<output_offset<<std::endl;
+                symb_cnt++;
+            }
+            //silent_time_between_pulse2_and_pulse3
+            for (int i =0; i < apcma_code_length-(2*send_data); i++){
+                for (int j = 0; j < m_samples_per_symbol; j++)
                 {
-                    if (preamb_symb_cnt < n_up + 5) //should output preamble part
-                    {
-                        if (preamb_symb_cnt < n_up)
-                        { //upchirps
-                            memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
-                        }
-                        else if (preamb_symb_cnt == n_up) //sync words
-                            build_upchirp(&out[output_offset], m_sync_words[0], m_sf,m_os_factor);
-                        else if (preamb_symb_cnt == n_up + 1)
-                            build_upchirp(&out[output_offset], m_sync_words[1], m_sf,m_os_factor);
-
-                        else if (preamb_symb_cnt < n_up + 4) //2.25 downchirps
-                            memcpy(&out[output_offset], &m_downchirp[0], m_samples_per_symbol * sizeof(gr_complex));
-                        else if (preamb_symb_cnt == n_up + 4)
-                        {
-                            memcpy(&out[output_offset], &m_downchirp[0], m_samples_per_symbol / 4 * sizeof(gr_complex));
-                            //correct offset dur to quarter of downchirp
-                            output_offset -= 3 * m_samples_per_symbol / 4;
-                            symb_cnt = 0;
-                            
-                        }
-                        output_offset += m_samples_per_symbol;
-                        preamb_symb_cnt++;
-                    }
+                    out[output_offset + j] = gr_complex(0.0, 0.0);
                 }
+		//mencpy(&out[output_offset], &silent[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
             }
-            
-            if ( symb_cnt < m_frame_len && symb_cnt>-1) //output payload
-            {
-                nitems_to_process = std::min(nitems_to_process, int((float)(noutput_items - output_offset) / m_samples_per_symbol));
-                nitems_to_process = std::min(nitems_to_process, ninput_items[0]);
-                for (int i = 0; i < nitems_to_process; i++)
+            //apcma_3rd_pulse
+            if(symb_cnt==2){
+                memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
+		//std::cout <<"3rd_pulse_output_offset"<<output_offset<<std::endl;
+                symb_cnt++;
+		            }
+            //silent_time_between_pulse3_and_pulse4
+            for (int i =0; i < send_data; i++){
+                for (int j = 0; j < m_samples_per_symbol; j++)
                 {
-                    build_upchirp(&out[output_offset], in[i], m_sf,m_os_factor);
-                    output_offset += m_samples_per_symbol;
-                    symb_cnt++;
+                    out[output_offset + j] = gr_complex(0.0, 0.0);
                 }
+		//mencpy(&out[output_offset], &silent[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
             }
-            else
-            {
-                nitems_to_process = 0;
+            //apcma_4th_pulse
+            if(symb_cnt==3){
+                memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                output_offset += m_samples_per_symbol;
+		//std::cout <<"4th_pulse_output_offset"<<output_offset<<std::endl;
+                symb_cnt++;
+		frame_cnt++;
+		std::cout<< "Frame" << frame_cnt << "sent\t" << "send_value_is:" << send_data << std::endl;
+ 
+		
             }
-
-            if (symb_cnt >= m_frame_len) //padd frame end with zeros
+	    //std::cout<<"symb_cnt:	"<<symb_cnt<<std::endl;
+	    //zeros
+	    //if (symb_cnt+apcma_code_length >= m_frame_len) //padd frame end with zeros
+	    if (symb_cnt== 4 ) //padd frame end with zeros
             {
                 for (int i = 0; i < (noutput_items - output_offset) / m_samples_per_symbol; i++)
                 {
-                    if (symb_cnt < m_frame_len + m_inter_frame_padding)
+                    if (padd_cnt < m_inter_frame_padding)
                     {
-                        for (int i = 0; i < m_samples_per_symbol; i++)
+                        for (int j = 0; j < m_samples_per_symbol; j++)
                         {
-                            out[output_offset + i] = gr_complex(0.0, 0.0);
+                            out[output_offset + j] = gr_complex(0.0, 0.0);
                         }
                         output_offset += m_samples_per_symbol;
                         symb_cnt++;
                         padd_cnt++;
                     }
                 }
+		//std::cout<<"padd_end"<<padd_cnt<<std::endl;
+		//std::cout<<"symb_end"<<symb_cnt<<std::endl;
             }
-            if ( symb_cnt == m_frame_len + m_inter_frame_padding)
-            {
-                symb_cnt++;
-                frame_cnt++;
-                std::cout << "Frame " << frame_cnt << " sent\n";
+	    if ( symb_cnt == m_inter_frame_padding+4)
+            {	
+                //symb_cnt++;
+		//std::cout <<"symb_cnt:	"<<symb_cnt <<"\n";
+                //std::cout << "Frame " << frame_cnt << " sent\n";
             }
-            // if (nitems_to_process)
-            //     std::cout << ninput_items[0] << " " << nitems_to_process << " " << output_offset << " " << noutput_items << std::endl;
-            consume_each(nitems_to_process);
-            return output_offset;
+             if (nitems_to_process)
+                 //std::cout << ninput_items[0] << " " << nitems_to_process << " " << output_offset << " " << noutput_items << std::endl;
+            //std::cout<<"nitems_to_process	"<<nitems_to_process<<std::endl;
+	    consume_each(nitems_to_process);
+	    //std::cout <<"output_offset"<<output_offset<<std::endl;
+	    return output_offset;
+	   
         }
+            
+	    //APCMA_END
 
+            //if (symb_cnt == -1) // preamble
+            //{
+                //for (int i = 0; i < noutput_items / m_samples_per_symbol; i++)
+                //{
+                    //if (preamb_symb_cnt < n_up + 5) //should output preamble part
+                    //{
+                        //if (preamb_symb_cnt < n_up)
+                        //{ //upchirps
+                            //memcpy(&out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                        //}
+                        //else if (preamb_symb_cnt == n_up) //sync words
+                            //build_upchirp(&out[output_offset], m_sync_words[0], m_sf,m_os_factor);
+                        //else if (preamb_symb_cnt == n_up + 1)
+                            //build_upchirp(&out[output_offset], m_sync_words[1], m_sf,m_os_factor);
+
+                        //else if (preamb_symb_cnt < n_up + 4) //2.25 downchirps
+                            //memcpy(&out[output_offset], &m_downchirp[0], m_samples_per_symbol * sizeof(gr_complex));
+                        //else if (preamb_symb_cnt == n_up + 4)
+                        //{
+                            //memcpy(&out[output_offset], &m_downchirp[0], m_samples_per_symbol / 4 * sizeof(gr_complex));
+                            ////correct offset dur to quarter of downchirp
+                            //output_offset -= 3 * m_samples_per_symbol / 4;
+                            //symb_cnt = 0;
+                            
+                        //}
+			////my adding
+			////std::cout<<noutput_items<<std::endl;
+			////std::cout<<" m_frame_len:"<<<<std::endl;
+			////end
+                        //output_offset += m_samples_per_symbol;
+                        //preamb_symb_cnt++;
+                    //}
+                //}
+            //}
+            
+	    ////my addings
+	    ////std::cout <<"output_offset_payload_start::"<<output_offset<<std::endl;
+	    ////end
+	    
+            //if ( symb_cnt < m_frame_len && symb_cnt>-1) //output payload
+            //{
+                //nitems_to_process = std::min(nitems_to_process, int((float)(noutput_items - output_offset) / m_samples_per_symbol));
+                //nitems_to_process = std::min(nitems_to_process, ninput_items[0]);
+                //for (int i = 0; i < nitems_to_process; i++)
+                //{
+                    //build_upchirp(&out[output_offset], in[i], m_sf,m_os_factor);
+                    //output_offset += m_samples_per_symbol;
+                    //symb_cnt++;
+                //}
+            //}
+            //else
+            //{
+                //nitems_to_process = 0;
+            //}
+	    
+	    
+            //if (symb_cnt >= m_frame_len) //padd frame end with zeros
+            //{
+                //for (int i = 0; i < (noutput_items - output_offset) / m_samples_per_symbol; i++)
+                //{
+                    //if (symb_cnt < m_frame_len + m_inter_frame_padding)
+                    //{
+                        //for (int i = 0; i < m_samples_per_symbol; i++)
+                        //{
+                            //out[output_offset + i] = gr_complex(0.0, 0.0);
+                        //}
+                        //output_offset += m_samples_per_symbol;
+                        //symb_cnt++;
+                        //padd_cnt++;
+                    //}
+                //}
+            //}
+	    
+            //if ( symb_cnt+apcma_code_length == m_frame_len + m_inter_frame_padding)
+	    //if ( symb_cnt == m_frame_len + m_inter_frame_padding)
+            //{
+                //symb_cnt++;
+                //frame_cnt++;
+		//std::cout <<"symb_cnt:	"<<symb_cnt <<"\n";
+                //std::cout << "Frame " << frame_cnt << " sent\n";
+            //}
+            //// if (nitems_to_process)
+            ////     std::cout << ninput_items[0] << " " << nitems_to_process << " " << output_offset << " " << noutput_items << std::endl;
+            //consume_each(nitems_to_process);
+	    ////std::cout<<"m_frame_len_is::"<<m_frame_len<<std::endl;
+	    ////addings
+	    //std::cout <<"output_offset"<<output_offset<<std::endl;
+	    ////end
+            //return output_offset;
+	   
+        //}
+	
+	
+	
     } /* namespace lora */
 } /* namespace gr */

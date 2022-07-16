@@ -71,6 +71,9 @@ namespace gr
           cw_cnt = 0;
           m_frame_len = pmt::to_long(tags[0].value);
           tags[0].value = pmt::from_long(8 + std::max((int)std::ceil((double)(m_frame_len - m_sf + 2) / m_sf) * (m_cr + 4), 0)); //get number of items in frame
+          //addings
+          //std::cout<<"interleaber_frame_length_is::::"<<tags[0].value<<std::endl;
+          //end
           tags[0].offset = nitems_written(0); 
         }
       }

@@ -36,7 +36,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '0'
+    value: '70'
   states:
     bus_sink: false
     bus_source: false
@@ -60,7 +60,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 868.1e6
+    value: 920e6
   states:
     bus_sink: false
     bus_source: false
@@ -84,7 +84,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '1000'
+    value: '93'
   states:
     bus_sink: false
     bus_source: false
@@ -96,7 +96,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 'True'
+    value: 'False'
   states:
     bus_sink: false
     bus_source: false
@@ -148,13 +148,13 @@ blocks:
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
-    msg: pmt.intern("hello world")
+    msg: pmt.intern("1234")
     period: frame_period
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 164.0]
+    coordinate: [0, 148.0]
     rotation: 0
     state: enabled
 - name: lora_sdr_add_crc_0
@@ -272,7 +272,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 144.0]
+    coordinate: [192, 144.0]
     rotation: 0
     state: enabled
 - name: uhd_usrp_sink_0
@@ -386,7 +386,7 @@ blocks:
     clock_source6: ''
     clock_source7: ''
     comment: ''
-    dev_addr: '"addr=192.168.10.4"'
+    dev_addr: '" "'
     dev_args: ''
     gain0: TX_gain
     gain1: '0'
@@ -532,6 +532,7 @@ blocks:
     sd_spec6: ''
     sd_spec7: ''
     show_lo_controls: 'False'
+    start_time: '-1.0'
     stream_args: ''
     stream_chans: '[]'
     sync: none
@@ -548,7 +549,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [960, 76.0]
+    coordinate: [1056, 76.0]
     rotation: 0
     state: enabled
 

@@ -29,7 +29,10 @@ endif(NOT lora_sdr_sources)
 # Include swig generation macros
 ########################################################################
 find_package(SWIG)
-find_package(PythonLibs)
+#find_package(PythonLibs)
+#honda_adding_zone
+find_package(PythonLibs 2)
+#end
 if(NOT SWIG_FOUND OR NOT PYTHONLIBS_FOUND)
     return()
 endif()
@@ -47,6 +50,8 @@ set(GR_SWIG_LIBRARIES gnuradio-lora_sdr)
 #set(GR_SWIG_DOC_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 GR_SWIG_MAKE(lora_sdr_swig lora_sdr_swig.i)
+
+
 
 ########################################################################
 # Install the build swig module

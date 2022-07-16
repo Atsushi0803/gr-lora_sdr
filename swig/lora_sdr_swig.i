@@ -6,6 +6,10 @@
 
 //load generated python docstrings
 //%include "lora_sdr_swig_doc.i"
+//honda_adding_zone
+//%include "lora_sdr_swig_doc.i"
+//end
+
 
 %{
 #include "lora_sdr/add_crc.h"

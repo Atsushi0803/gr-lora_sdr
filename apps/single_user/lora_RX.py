@@ -6,7 +6,7 @@
 #
 # GNU Radio Python Flow Graph
 # Title: Lora Rx
-# GNU Radio version: 3.8.2.0
+# GNU Radio version: v3.8.3.1-14-g34ea1a45
 
 from gnuradio import filter
 from gnuradio.filter import firdes
@@ -64,7 +64,6 @@ class lora_RX(gr.top_block):
         self.lora_sdr_crc_verif_0 = lora_sdr.crc_verif()
         self.interp_fir_filter_xxx_0 = filter.interp_fir_filter_ccf(4, (-0.128616616593872,	-0.212206590789194,	-0.180063263231421,	3.89817183251938e-17	,0.300105438719035	,0.636619772367581	,0.900316316157106,	1	,0.900316316157106,	0.636619772367581,	0.300105438719035,	3.89817183251938e-17,	-0.180063263231421,	-0.212206590789194,	-0.128616616593872))
         self.interp_fir_filter_xxx_0.declare_sample_delay(0)
-
 
 
         ##################################################
