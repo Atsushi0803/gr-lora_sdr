@@ -8,7 +8,7 @@ ENV LANGUAGE ja_JP:ja
 
 RUN apt update
 RUN apt upgrade -y
-RUN apt install -y wget vim zsh software-properties-common git vim locales make cmake swig doxygen raphviz liborc-0.4-dev
+RUN apt install -y wget vim zsh software-properties-common git vim locales make cmake swig liborc-0.4-dev
 RUN locale-gen ja_JP.UTF-8
 
 RUN add-apt-repository ppa:gnuradio/gnuradio-releases-3.8 -y

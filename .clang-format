@@ -1,0 +1,7 @@
+BasedOnStyle: Webkit
+BreakBeforeBraces: "Linux"
+IndentWidth: 4
+Standard: "Cpp11"
+TabWidth: 4
+UseTab: "Never"
+CommentPragmas: '\*'
