@@ -41,15 +41,16 @@ modulate_impl::modulate_impl( uint8_t sf,
 
     // 送信するデータを定義(ループ状)
     start_var = 1;
-    end_var   = 32;
+    end_var   = 8;
     l_send_data.resize( end_var - start_var + 1 );
     for ( int i = 0; i < ( end_var - start_var + 1 ); i++ ) {
         l_send_data[i] = start_var + i;
     }
 
     if ( m_npulse == 4 ) {
-        m_length_c = 2 ^ ( m_nbit + 1 ) + 5;
+        m_length_c = std::pow( 2, m_nbit + 1 ) + 5;
     }
+
     m_codeword.resize( m_length_c );
     l_interval.resize( m_npulse - 1 );
     //////////////////////////////////////////////////////////////////////////////////
@@ -109,11 +110,11 @@ int
 
     // my addings
 
-
+    /*
     if ( frame_cnt == 100 ) {
         std::exit( 1 );
     }
-
+	*/
     int tag_length = 30;
     // std::vector<gr_comprex> silent(m_samples_per_symbol, (0.0, 0.0));
     // end
@@ -161,7 +162,8 @@ int
     for ( int i = 0; i < m_length_c; i++ ) {
         m_codeword[i] = 0;
     }
-    m_send_data  = l_send_data[m_send_index];
+    m_send_data = l_send_data[m_send_index];
+    std::cout << "send_data: " << m_send_data << std::endl;
     m_send_index = ( m_send_index + 1 ) % ( end_var - start_var + 1 );    //
 
     // 符号語の設定
@@ -171,13 +173,18 @@ int
         int tmp_index         = std::accumulate( l_interval.begin(), std::next( l_interval.begin(), i ), 0 ) + i;    // パルスがオンになるm_codewordのインデックスを作成
         m_codeword[tmp_index] = 1;
     }
+
+    // m_codewordの中身を出力
+    // std::copy(m_codeword.begin(), m_codeword.end(), std::ostream_iterator<int>(std::cout, "; "));
+    // std::cout << std::endl;
+
     for ( int i = 0; i < m_length_c; i++ ) {
         if ( m_codeword[i] == 0 ) {
             memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
-            std::cout << "0";
+            //std::cout << "0";
         } else {
             memcpy( &out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof( gr_complex ) );
-            std::cout << "1";
+            //std::cout << "1";
         }
         output_offset += m_samples_per_symbol;
     }
