@@ -174,11 +174,14 @@ int
     for ( int i = 0; i < m_length_c; i++ ) {
         if ( m_codeword[i] == 0 ) {
             memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
+            std::cout << "0";
         } else {
             memcpy( &out[output_offset], &m_upchirp[0], m_samples_per_symbol * sizeof( gr_complex ) );
+            std::cout << "1";
         }
         output_offset += m_samples_per_symbol;
     }
+    std::cout << "\n";
     for ( int i = 0; i < ( noutput_items - output_offset ) / m_samples_per_symbol; i++ ) {
         if ( padd_cnt < m_inter_frame_padding ) {
             for ( int j = 0; j < m_samples_per_symbol; j++ ) {
