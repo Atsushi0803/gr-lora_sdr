@@ -35,6 +35,10 @@ modulate_impl::modulate_impl( uint8_t sf,
     m_samples_per_symbol = (uint32_t)( m_number_of_bins * m_os_factor );
 
     // \* ////////////////////////// APCMA edited by Atsushi.N ////////////////////////////////////
+
+    m_npulse = 4;    //パルスの数を定義
+    m_nbit   = 3;
+
     // 送信するデータを定義(ループ状)
     start_var = 1;
     end_var   = 32;
@@ -43,8 +47,6 @@ modulate_impl::modulate_impl( uint8_t sf,
         l_send_data[i] = start_var + i;
     }
 
-    m_npulse = 4;    //パルスの数を定義
-    m_nbit   = 3;
     if ( m_npulse == 4 ) {
         m_length_c = 2 ^ ( m_nbit + 1 ) + 5;
     }
@@ -106,7 +108,7 @@ int
     std::vector<tag_t> tags;
 
     // my addings
-    const int apcma_code_length = 513;
+
 
     if ( frame_cnt == 100 ) {
         std::exit( 1 );
@@ -139,7 +141,7 @@ int
                 // m_inter_frame_padding + n_up + 4.25) *
                 // m_samples_per_symbol)); tags[0].value =
                 // pmt::from_long(tag_length*m_samples_per_symbol);
-                tags[0].value = pmt::from_long( int( ( apcma_code_length + 20 ) * m_samples_per_symbol ) );
+                tags[0].value = pmt::from_long( int( (m_length_c)*m_samples_per_symbol ) );
 
                 // std::cout<<"tags[0].value:
                 // "<<tags[0].value<<std::endl;
