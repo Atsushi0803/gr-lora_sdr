@@ -45,7 +45,7 @@ modulate_impl::modulate_impl( uint8_t sf,
     // case 4:    // Andi-5pulse
     m_code_def = 4;
     m_npulse   = 5;    //パルスの数を定義
-    m_nbit     = 3;
+    m_nbit     = 4;
 
     // 送信するデータを定義(ループ状)
     start_var = 1;
@@ -83,22 +83,22 @@ modulate_impl::modulate_impl( uint8_t sf,
             std::cout << "Error occured. Code definition doesn't match any of them." << std::endl;
             break;
     }
+    // バグで実装できず
+    // std::ifstream ifs( input_filepath );
 
-    std::ifstream ifs( input_filepath );
-
-    std::string line;
-    uint8_t     nline = 2;
-    while ( std::getline( ifs, line ) ) {
-        if ( nline == m_nbit ) {
-            std::vector<std::string> strvec = split( line, ',' );
-            for ( int i = 0; i < strvec.size(); i++ ) {
-                m_l_A[i] = stoi( strvec.at( i ) );
-            }
-            break;
-        }
-        nline++;
-    }
-
+    // std::string line;
+    // uint8_t     nline = 2;
+    // while ( std::getline( ifs, line ) ) {
+    //     if ( nline == m_nbit ) {
+    //         std::vector<std::string> strvec = split( line, ',' );
+    //         for ( int i = 0; i < strvec.size(); i++ ) {
+    //             m_l_A[i] = stoi( strvec.at( i ) );
+    //         }
+    //         break;
+    //     }
+    //     nline++;
+    // }
+    m_l_A = { 55, 57, 54, 57, 55, 45, 51, 54, 44, 44, 44, 31, 39, 35, 19, 17, 15, 17, 17, 25, 25, 25, 25, 39, 19, 16, 13, 10, 12, 9, 6, 18 };
 
     m_codeword.resize( m_length_c );
     //////////////////////////////////////////////////////////////////////////////////
