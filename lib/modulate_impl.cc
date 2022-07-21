@@ -96,7 +96,8 @@ modulate_impl::modulate_impl( uint8_t sf,
     //     }
     //     nline++;
     // }
-    m_l_A = { 27, 28, 26, 27, 19, 19, 11, 9, 7, 17, 8, 11, 8, 8, 5, 10 };
+    // m_l_A = { 27, 28, 26, 27, 19, 19, 11, 9, 7, 17, 8, 11, 8, 8, 5, 10 };
+    m_l_A = get_data_ai( m_code_def, m_nbit );
 
     m_codeword.resize( m_length_c );
     //////////////////////////////////////////////////////////////////////////////////
@@ -224,10 +225,10 @@ int
             m_l_onslot = { 0, m_send_data + 1, m_send_data + ( m_length_c + 2 ) / 2, m_length_c - 1 };
             break;
         case 3:    // PaDi-4pulse(3)
-            m_l_onslot = { 0, m_send_data + 1, m_send_data + m_length_c / 2 , m_length_c - 1};
+            m_l_onslot = { 0, m_send_data + 1, m_send_data + m_length_c / 2, m_length_c - 1 };
             break;
         case 4:    // Andi-5pulse
-            m_l_onslot = { 0, m_send_data + 1, m_send_data + 2 + m_l_A[m_send_data - 1], m_length_c - m_send_data - 2 , m_length_c - 1};
+            m_l_onslot = { 0, m_send_data + 1, m_send_data + 2 + m_l_A[m_send_data - 1], m_length_c - m_send_data - 2, m_length_c - 1 };
             break;
         default:
             std::cout << "Error occured. Code definition doesn't match any of them." << std::endl;
@@ -240,10 +241,10 @@ int
     for ( int i = 0; i < m_npulse; i++ ) {
         m_codeword[m_l_onslot[i]] = 1;
     }
-	
+
 
     // m_codewordの中身を出力
-    std::copy(m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>(std::cout, ","));
+    std::copy( m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>( std::cout, "," ) );
     std::cout << std::endl;
 
     for ( int i = 0; i < m_length_c; i++ ) {
@@ -466,15 +467,6 @@ int
 
 //}
 
-std::vector<std::string>
-    split( std::string &input, char delimiter ) {
-    std::istringstream       stream( input );
-    std::string              field;
-    std::vector<std::string> result;
-    while ( getline( stream, field, delimiter ) ) {
-        result.push_back( field );
-    }
-    return result;
-}
+
 }    // namespace lora_sdr
-} /* namespace gr */
+}    // namespace gr

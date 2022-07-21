@@ -1,6 +1,7 @@
 #ifndef INCLUDED_LORA_MODULATE_IMPL_H
 #define INCLUDED_LORA_MODULATE_IMPL_H
 
+#include <data_ai.cpp>
 #include <fstream>
 #include <gnuradio/io_signature.h>
 #include <iostream>
@@ -54,8 +55,7 @@ class modulate_impl: public modulate {
     std::vector<uint32_t> m_l_onslot;
     std::string           input_filepath;
     std::vector<uint32_t> m_l_A;    // 符号語定義のための配列A_i[]
-
-    std::vector<std::string> split( std::string &input, char delimiter );
+    std::vector<uint32_t> get_data_ai( uint8_t code_def, uint8_t nbit );
 
   public:
     modulate_impl( uint8_t sf, uint32_t samp_rate, uint32_t bw, std::vector<uint16_t> sync_words );
