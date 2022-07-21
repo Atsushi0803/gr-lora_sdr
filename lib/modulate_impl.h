@@ -1,7 +1,6 @@
 #ifndef INCLUDED_LORA_MODULATE_IMPL_H
 #define INCLUDED_LORA_MODULATE_IMPL_H
 
-#include <data_ai.cpp>
 #include <fstream>
 #include <gnuradio/io_signature.h>
 #include <iostream>
