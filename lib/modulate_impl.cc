@@ -2,6 +2,7 @@
 #    include "config.h"
 #endif
 
+
 #include "modulate_impl.h"
 
 namespace gr {
@@ -30,14 +31,21 @@ modulate_impl::modulate_impl( uint8_t sf,
     m_bw         = bw;
     m_sync_words = sync_words;
 
+
     m_number_of_bins     = (uint32_t)( 1u << m_sf );
     m_os_factor          = m_samp_rate / m_bw;
     m_samples_per_symbol = (uint32_t)( m_number_of_bins * m_os_factor );
 
     // \* ////////////////////////// APCMA edited by Atsushi.N ////////////////////////////////////
-
-    m_npulse = 4;    //パルスの数を定義
-    m_nbit   = 3;
+    // m_code_defでどの符号語を使うかを指定
+    // case 0:    // Andi-4pulse(1) (x/C-2x/x)
+    // case 1:    // PaDi-4pulse(1)
+    // case 2:    // PaDi-4pulse(2)
+    // case 3:    // PaDi-4pulse(3)
+    // case 4:    // Andi-5pulse
+    m_code_def = 4;
+    m_npulse   = 5;    //パルスの数を定義
+    m_nbit     = 3;
 
     // 送信するデータを定義(ループ状)
     start_var = 1;
@@ -50,9 +58,49 @@ modulate_impl::modulate_impl( uint8_t sf,
     if ( m_npulse == 4 ) {
         m_length_c = std::pow( 2, m_nbit + 1 ) + 5;
     }
+    switch ( m_code_def ) {
+        case 0:    // Andi-4pulse
+            m_length_c     = std::pow( 2, m_nbit + 1 ) + 5;
+            input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/AnDi-4pulse.csv";
+            break;
+        case 1:    // PaDi-4pulse(1)
+            m_length_c     = std::pow( 2, m_nbit + 1 ) + 5;
+            input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/PaDi-4pulse(1).csv";
+            break;
+        case 2:    // PaDi-4pulse(2)
+            m_length_c     = std::pow( 2, m_nbit + 1 ) + 5;
+            input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/PaDi-4pulse(2).csv";
+            break;
+        case 3:    // PaDi-4pulse(3)
+            m_length_c     = std::pow( 2, m_nbit + 1 ) + 6;
+            input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/PaDi-4pulse(3).csv";
+            break;
+        case 4:    // Andi-5pulse
+            m_length_c     = std::pow( 2, m_nbit ) * 3 + 5;
+            input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/Andi-5pulse.csv";
+            break;
+        default:
+            std::cout << "Error occured. Code definition doesn't match any of them." << std::endl;
+            break;
+    }
+
+    std::ifstream ifs( input_filepath );
+
+    std::string line;
+    uint8_t     nline = 2;
+    while ( std::getline( ifs, line ) ) {
+        if ( nline == m_nbit ) {
+            std::vector<std::string> strvec = split( line, ',' );
+            for ( int i = 0; i < strvec.size(); i++ ) {
+                m_l_A[i] = stoi( strvec.at( i ) );
+            }
+            break;
+        }
+        nline++;
+    }
+
 
     m_codeword.resize( m_length_c );
-    l_interval.resize( m_npulse - 1 );
     //////////////////////////////////////////////////////////////////////////////////
 
     // m_inter_frame_padding = 20; // add some empty symbols at the end of a
@@ -95,6 +143,7 @@ void
     modulate_impl::forecast( int noutput_items, gr_vector_int &ninput_items_required ) {
     ninput_items_required[0] = 1;
 }
+
 
 int
     modulate_impl::general_work( int noutput_items,
@@ -159,20 +208,41 @@ int
 
     // \* ////////////////////////// APCMA edited by Atsushi.N ////////////////////////////////////
 
-    for ( int i = 0; i < m_length_c; i++ ) {
+
+    m_send_data = l_send_data[m_send_index];                              // m_send_dataに送信データを格納
+    std::cout << "send_data: " << m_send_data << std::endl;               // 標準出力に送信データを出力
+    m_send_index = ( m_send_index + 1 ) % ( end_var - start_var + 1 );    // m_send_index(送信データをループさせるためのインデックス)を一つ進める
+
+    // 符号語の設定(設定はD:\Documents\長谷川研\APCMA_WeeklyReport\APCMA_CodeDefinition.pptxにすべて記載)
+    // A_i[]はこのプロジェクトフォルダのルートから"./data_ai/[符号語の名前].csvで管理
+    switch ( m_code_def ) {
+        case 0:    // Andi-4pulse(1)
+            m_l_onslot = { 0, m_send_data + 2, m_length_c - m_send_data - 3, m_length_c - 1 };
+            break;
+        case 1:    // PaDi-4pulse(1)
+            m_l_onslot = { 0, m_send_data + 2, 2 * m_send_data + 3, m_length_c - 1 };
+            break;
+        case 2:    // PaDi-4pulse(2)
+            m_l_onslot = { 0, m_send_data + 2, m_send_data + ( m_length_c + 3 ) / 2, m_length_c - 1 };
+            break;
+        case 3:    // PaDi-4pulse(3)
+            m_l_onslot = { 0, m_send_data + 2, m_send_data + 1 + m_length_c / 2 };
+            break;
+        case 4:    // Andi-5pulse
+            m_l_onslot = { m_send_data + 2, m_send_data + 3 + m_l_A[m_send_data - 1], m_length_c - m_send_data - 3 };
+            break;
+        default:
+            std::cout << "Error occured. Code definition doesn't match any of them." << std::endl;
+            break;
+    }
+
+    for ( int i = 0; i < m_length_c; i++ ) {    // m_codewordを0で初期化
         m_codeword[i] = 0;
     }
-    m_send_data = l_send_data[m_send_index];
-    std::cout << "send_data: " << m_send_data << std::endl;
-    m_send_index = ( m_send_index + 1 ) % ( end_var - start_var + 1 );    //
-
-    // 符号語の設定
-    // x/c-2x/cの場合
-    l_interval = { m_send_data, m_length_c - 2 * m_send_data - 4, m_send_data };
     for ( int i = 0; i < m_npulse; i++ ) {
-        int tmp_index         = std::accumulate( l_interval.begin(), std::next( l_interval.begin(), i ), 0 ) + i;    // パルスがオンになるm_codewordのインデックスを作成
-        m_codeword[tmp_index] = 1;
+        m_codeword[m_l_onslot[i]] = 1;
     }
+
 
     // m_codewordの中身を出力
     // std::copy(m_codeword.begin(), m_codeword.end(), std::ostream_iterator<int>(std::cout, "; "));
@@ -398,5 +468,15 @@ int
 
 //}
 
+std::vector<std::string>
+    split( std::string &input, char delimiter ) {
+    std::istringstream       stream( input );
+    std::string              field;
+    std::vector<std::string> result;
+    while ( getline( stream, field, delimiter ) ) {
+        result.push_back( field );
+    }
+    return result;
+}
 }    // namespace lora_sdr
 } /* namespace gr */

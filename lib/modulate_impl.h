@@ -6,6 +6,7 @@
 #include <iostream>
 #include <lora_sdr/modulate.h>
 #include <lora_sdr/utilities.h>
+#include <sstream>
 
 namespace gr {
 namespace lora_sdr {
@@ -40,6 +41,7 @@ class modulate_impl: public modulate {
     uint64_t frame_cnt;          ///< counter of the number of frame sent
 
     ///////////////// APCMA edited by ATsushi.N ////////////////////////////////
+    uint8_t               m_code_def;
     uint32_t              m_send_index = 0;
     uint32_t              start_var;
     uint32_t              end_var;
@@ -49,7 +51,11 @@ class modulate_impl: public modulate {
     uint32_t              m_npulse;
     uint32_t              m_length_c;
     std::vector<uint32_t> m_codeword;
-    std::vector<uint32_t> l_interval;
+    std::vector<uint32_t> m_l_onslot;
+    std::string           input_filepath;
+    std::vector<uint32_t> m_l_A;    // 符号語定義のための配列A_i[]
+
+    std::vector<std::string> split( std::string &input, char delimiter );
 
   public:
     modulate_impl( uint8_t sf, uint32_t samp_rate, uint32_t bw, std::vector<uint16_t> sync_words );
