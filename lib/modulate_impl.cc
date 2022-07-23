@@ -43,6 +43,7 @@ modulate_impl::modulate_impl( uint8_t sf,
     // case 2:    // PaDi-4pulse(2)
     // case 3:    // PaDi-4pulse(3)
     // case 4:    // Andi-5pulse
+    // case 5:    // PaDi-5pulse
     m_code_def = 4;
     m_npulse   = 5;    //パルスの数を定義
     m_nbit     = 4;
@@ -77,7 +78,7 @@ modulate_impl::modulate_impl( uint8_t sf,
             m_length_c     = std::pow( 2, m_nbit ) * 3 + 5;
             input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/Andi-5pulse.csv";
             break;
-        case 5:
+        case 5:    //PaDi-5pulse
             m_length_c     = std::pow( 2, m_nbit ) * 3 + 6;
             input_filepath = "/home/pi/gr-apcma/gr-lora_sdr/Padi-5pulse.csv";
         default:
@@ -267,7 +268,6 @@ int
     m_send_index = ( m_send_index + 1 ) % ( end_var - start_var + 1 );    // m_send_index(送信データをループさせるためのインデックス)を一つ進める
 
     // 符号語の設定(設定はD:\Documents\長谷川研\APCMA_WeeklyReport\APCMA_CodeDefinition.pptxにすべて記載)
-    // A_i[]はこのプロジェクトフォルダのルートから"./data_ai/[符号語の名前].csvで管理
     switch ( m_code_def ) {
         case 0:    // Andi-4pulse(1)
             m_l_onslot = { 0, m_send_data + 1, m_length_c - m_send_data - 2, m_length_c - 1 };
