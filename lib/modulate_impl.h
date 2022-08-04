@@ -6,6 +6,7 @@
 #include <iostream>
 #include <lora_sdr/modulate.h>
 #include <lora_sdr/utilities.h>
+#include <random>
 #include <sstream>
 
 namespace gr {
@@ -50,11 +51,16 @@ class modulate_impl: public modulate {
     uint32_t              m_nbit;
     uint32_t              m_npulse;
     uint32_t              m_length_c;
+    uint32_t              m_interval_slots;
     std::vector<uint32_t> m_codeword;
     std::vector<uint32_t> m_l_onslot;
     std::string           input_filepath;
     std::vector<uint32_t> m_l_A;    // 符号語定義のための配列A_i[]
     std::vector<uint32_t> get_data_ai( uint8_t code_def, uint8_t nbit );
+    std::mt19937          mt;     // メルセンヌ・ツイスタの32ビット版
+    std::random_device    rnd;    // 非決定的な乱数生成器
+    uint32_t              m_max_interval_slots;
+
 
   public:
     modulate_impl( uint8_t sf, uint32_t samp_rate, uint32_t bw, std::vector<uint16_t> sync_words );

@@ -30,7 +30,7 @@ modulate_impl::modulate_impl( uint8_t sf,
     m_samp_rate  = samp_rate;
     m_bw         = bw;
     m_sync_words = sync_words;
-
+    mt.seed( rnd() );    // シード指定
 
     m_number_of_bins     = (uint32_t)( 1u << m_sf );
     m_os_factor          = m_samp_rate / m_bw;
@@ -303,6 +303,13 @@ int
     std::copy( m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>( std::cout, "," ) );
     std::cout << std::endl;
 
+    m_max_interval_slots = m_length_c / 2;
+    m_interval_slots     = mt() % m_max_interval_slots;
+    for ( int i = 0; i < m_interval_slots; i++ ) {
+        memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
+        output_offset += m_samples_per_symbol;
+    }
+
     for ( int i = 0; i < m_length_c; i++ ) {
         if ( m_codeword[i] == 0 ) {
             memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
@@ -313,17 +320,17 @@ int
         }
         output_offset += m_samples_per_symbol;
     }
-    std::cout << "\n";
-    for ( int i = 0; i < ( noutput_items - output_offset ) / m_samples_per_symbol; i++ ) {
-        if ( padd_cnt < m_inter_frame_padding ) {
-            for ( int j = 0; j < m_samples_per_symbol; j++ ) {
-                out[output_offset + j] = gr_complex( 0.0, 0.0 );
-            }
-            output_offset += m_samples_per_symbol;
-            symb_cnt++;
-            padd_cnt++;
-        }
-    }
+
+    // for ( int i = 0; i < ( noutput_items - output_offset ) / m_samples_per_symbol; i++ ) {
+    //     if ( padd_cnt < m_inter_frame_padding ) {
+    //         for ( int j = 0; j < m_samples_per_symbol; j++ ) {
+    //             out[output_offset + j] = gr_complex( 0.0, 0.0 );
+    //         }
+    //         output_offset += m_samples_per_symbol;
+    //         symb_cnt++;
+    //         padd_cnt++;
+    //     }
+    // }
 
     /////////////////////////// \* Edited by Honda-san ///////////////////////////////////
     // // apcma_1st_pulse
