@@ -300,11 +300,12 @@ int
 
 
     // m_codewordの中身を出力
-    std::copy( m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>( std::cout, "," ) );
-    std::cout << std::endl;
+    // std::copy( m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>( std::cout, "," ) );
+    // std::cout << std::endl;
 
     m_max_interval_slots = m_length_c / 2;
     m_interval_slots     = mt() % m_max_interval_slots;
+    std::cout << "Interval slot is " << m_interval_slots << std::endl;
     for ( int i = 0; i < m_interval_slots; i++ ) {
         memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
         output_offset += m_samples_per_symbol;
