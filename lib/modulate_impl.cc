@@ -222,6 +222,12 @@ int
     // std::vector<gr_comprex> silent(m_samples_per_symbol, (0.0, 0.0));
     // end
 
+    // インターバルスロットの長さを乱数から定義
+    m_max_interval_slots = m_length_c / 2;
+    m_interval_slots     = mt() % m_max_interval_slots;
+    std::cout << "Interval slot is " << m_interval_slots << std::endl;
+
+
     get_tags_in_window( tags, 0, 0, ninput_items[0], pmt::string_to_symbol( "frame_len" ) );
 
     if ( tags.size() ) {
@@ -245,7 +251,7 @@ int
                 // m_inter_frame_padding + n_up + 4.25) *
                 // m_samples_per_symbol)); tags[0].value =
                 // pmt::from_long(tag_length*m_samples_per_symbol);
-                tags[0].value = pmt::from_long( int( (m_length_c)*m_samples_per_symbol ) );
+                tags[0].value = pmt::from_long( int( ( m_interval_slots + m_length_c ) * m_samples_per_symbol ) );
 
                 // std::cout<<"tags[0].value:
                 // "<<tags[0].value<<std::endl;
@@ -303,9 +309,7 @@ int
     // std::copy( m_l_onslot.begin(), m_l_onslot.end(), std::ostream_iterator<int>( std::cout, "," ) );
     // std::cout << std::endl;
 
-    m_max_interval_slots = m_length_c / 2;
-    m_interval_slots     = mt() % m_max_interval_slots;
-    std::cout << "Interval slot is " << m_interval_slots << std::endl;
+
     for ( int i = 0; i < m_interval_slots; i++ ) {
         memcpy( &out[output_offset], &m_zeros[0], m_samples_per_symbol * sizeof( gr_complex ) );
         output_offset += m_samples_per_symbol;
@@ -322,16 +326,16 @@ int
         output_offset += m_samples_per_symbol;
     }
 
-    // for ( int i = 0; i < ( noutput_items - output_offset ) / m_samples_per_symbol; i++ ) {
-    //     if ( padd_cnt < m_inter_frame_padding ) {
-    //         for ( int j = 0; j < m_samples_per_symbol; j++ ) {
-    //             out[output_offset + j] = gr_complex( 0.0, 0.0 );
-    //         }
-    //         output_offset += m_samples_per_symbol;
-    //         symb_cnt++;
-    //         padd_cnt++;
-    //     }
-    // }
+    for ( int i = 0; i < ( noutput_items - output_offset ) / m_samples_per_symbol; i++ ) {
+        if ( padd_cnt < m_inter_frame_padding ) {
+            for ( int j = 0; j < m_samples_per_symbol; j++ ) {
+                out[output_offset + j] = gr_complex( 0.0, 0.0 );
+            }
+            output_offset += m_samples_per_symbol;
+            symb_cnt++;
+            padd_cnt++;
+        }
+    }
 
     /////////////////////////// \* Edited by Honda-san ///////////////////////////////////
     // // apcma_1st_pulse
